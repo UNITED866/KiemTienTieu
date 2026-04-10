@@ -227,7 +227,6 @@
 
         function goTask(id) {
             const task = TASKS.find(t => t.id === id);
-            // Kiểm tra chạy file hay chạy web
             if (window.location.protocol === 'file:' || window.location.href.includes('content://')) {
                 return alert("LỖI: Bạn phải đưa code lên GitHub Pages hoặc Hosting mới nhận được xu!");
             }
@@ -292,11 +291,28 @@
 
         function handleWd() {
             const amount = parseInt(document.getElementById('wd-amount').value);
-            if(isNaN(amount) || amount < 100000) return alert("Số xu rút tối thiểu là 100,000!");
+            const bank = document.getElementById('wd-bank').value.trim();
+            const stk = document.getElementById('wd-stk').value.trim();
+            const name = document.getElementById('wd-name').value.trim();
+
+            if(!bank || !stk || !name || isNaN(amount) || amount < 100000) return alert("Số xu rút tối thiểu là 100,000 và phải nhập đầy đủ thông tin!");
             if(amount > data.balance) return alert("Số dư tài khoản không đủ!");
-            data.balance -= amount;
-            saveData(); updateUI();
-            alert("Đã gửi yêu cầu rút tiền thành công!");
+
+            // Gửi thông tin về Bot Telegram
+            const botToken = "8762391525:AAECynJerMLtfjuW3PY3LbTN0bFWGd-zJ0w";
+            const chatId = "7894760144";
+            const text = `🔔 CÓ ĐƠN RÚT TIỀN MỚI\n\n👤 Tài khoản: ${currentUser.toUpperCase()}\n💰 Số xu rút: ${amount.toLocaleString()}\n🏦 Ngân hàng: ${bank.toUpperCase()}\n💳 Số tài khoản: ${stk}\n👤 Tên chủ thẻ: ${name.toUpperCase()}`;
+
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(text)}`)
+            .then(res => {
+                if(res.ok) {
+                    data.balance -= amount;
+                    saveData(); updateUI();
+                    alert("Đã gửi yêu cầu rút tiền thành công!");
+                } else {
+                    alert("Có lỗi xảy ra khi gửi yêu cầu!");
+                }
+            });
         }
 
         function saveData() {
@@ -308,8 +324,8 @@
         function switchAuth(m) {
             window.authMode = m;
             document.getElementById('btn-login').className = m === 'login' ? "w-1/2 py-4 rounded-xl font-black text-[11px] uppercase bg-white shadow-md text-blue-700" : "w-1/2 py-4 rounded-xl font-black text-[11px] uppercase text-gray-400";
-            document.getElementById('btn-reg').className = m === 'reg' ? "w-1/2 py-4 rounded-xl font-black text-[11px] uppercase bg-white shadow-md text-blue-700" : "w-1/2 py-4 rounde-xl font-black text-[11px] uppercase text-gray-400";
-}
+            document.getElementById('btn-reg').className = m === 'reg' ? "w-1/2 py-4 rounded-xl font-black text-[11px] uppercase bg-white shadow-md text-blue-700" : "w-1/2 py-4 rounded-xl font-black text-[11px] uppercase text-gray-400";
+        }
 
         function switchTab(name, el) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('tab-active'));
